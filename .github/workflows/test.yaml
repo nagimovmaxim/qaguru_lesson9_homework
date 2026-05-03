@@ -5,7 +5,7 @@ on:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
-  workflow_dispatch:  # позволяет запускать вручную
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -30,10 +30,24 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
-      - name: Install Chrome
+      - name: Install Chrome and ChromeDriver
         run: |
+          echo "=== Installing Chrome ==="
           sudo apt-get update
           sudo apt-get install -y google-chrome-stable
+          
+          echo "=== Chrome version ==="
+          google-chrome --version
+          
+          echo "=== Installing ChromeDriver ==="
+          CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+')
+          echo "Chrome version: $CHROME_VERSION"
+          
+          # Установка ChromeDriver через webdrivermanager или вручную
+          sudo apt-get install -y chromium-chromedriver
+          
+          echo "=== ChromeDriver version ==="
+          chromedriver --version
 
       - name: Make gradlew executable
         run: chmod +x ./gradlew
@@ -41,6 +55,9 @@ jobs:
       - name: Run tests
         run: ./gradlew test
         continue-on-error: true
+        env:
+          SELENIDE_DRIVERMANAGER: false  # Отключаем автоматическую загрузку драйверов
+          CHROMEDRIVER_PATH: /usr/bin/chromedriver
 
       - name: Generate Allure report
         if: always()
@@ -63,8 +80,6 @@ jobs:
         run: |
           if [ -d "gh-pages/history" ]; then
             cp -r gh-pages/history allure-report/history 2>/dev/null || true
-          fi
-          if [ -d "gh-pages/data" ]; then
             cp -r gh-pages/data allure-report/data 2>/dev/null || true
           fi
 
