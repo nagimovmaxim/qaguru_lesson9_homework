@@ -1,0 +1,4 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"","5352","Check Issue by name: test issue in repo: nagimovmaxim/qaguru_lesson8_homework","","Sun May 03 15:42:47 UTC 2026","passed","Sun May 03 15:42:53 UTC 2026","","tests.GithubTests","tests.GithubTests","checkIssueNameTest"
+"","5105","Check Issue by name: test issue in repo: nagimovmaxim/qaguru_lesson8_homework via steps","","Sun May 03 15:42:53 UTC 2026","passed","Sun May 03 15:42:58 UTC 2026","","tests.GithubTests","tests.GithubTests","checkIssueNameTestSteps"
+"","7649","Check Issue by name: test issue in repo: nagimovmaxim/qaguru_lesson8_homework via lambda steps","","Sun May 03 15:42:40 UTC 2026","passed","Sun May 03 15:42:47 UTC 2026","","tests.GithubTests","tests.GithubTests","checkIssueNameTestLambdaSteps"
