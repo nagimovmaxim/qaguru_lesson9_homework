@@ -34,8 +34,6 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y google-chrome-stable chromium-chromedriver
-          google-chrome --version
-          chromedriver --version
 
       - name: Make gradlew executable
         run: chmod +x ./gradlew
@@ -49,38 +47,9 @@ jobs:
       - name: Generate Allure report
         if: always()
         run: |
-          sudo apt-get install -y wget
           wget -q https://github.com/allure-framework/allure2/releases/download/2.34.0/allure-2.34.0.tgz
           tar -xzf allure-2.34.0.tgz
-          rm -rf allure-report
           ./allure-2.34.0/bin/allure generate build/allure-results -o allure-report --clean
-
-      - name: Load previous report history
-        if: always()
-        uses: actions/checkout@v4
-        with:
-          ref: gh-pages
-          path: gh-pages-history
-          fetch-depth: 1
-        continue-on-error: true
-
-      - name: Merge history with new report
-        if: always()
-        run: |
-          echo "=== Checking for previous history ==="
-          if [ -d "gh-pages-history/history" ]; then
-            echo "Found previous history, copying..."
-            mkdir -p allure-report/history
-            cp -r gh-pages-history/history/* allure-report/history/ 2>/dev/null || echo "No history to copy"
-            cp -r gh-pages-history/widgets/* allure-report/widgets/ 2>/dev/null || echo "No widgets to copy"
-            cp -r gh-pages-history/data/* allure-report/data/ 2>/dev/null || echo "No data to copy"
-            echo "History merged successfully"
-          else
-            echo "No previous history found - first run"
-          fi          
-          touch allure-report/.nojekyll
-          echo "=== Report contents ==="
-          ls -la allure-report/
 
       - name: Deploy to GitHub Pages
         if: always()
@@ -91,11 +60,3 @@ jobs:
           publish_dir: allure-report
           force_orphan: true
           enable_jekyll: false
-          commit_message: "Update Allure report - ${{ github.run_number }} [skip ci]"
-          user_name: 'github-actions[bot]'
-          user_email: 'github-actions[bot]@users.noreply.github.com'
-          full_commit_message: |
-            Update Allure report
-            - Run: ${{ github.run_number }}
-            - Commit: ${{ github.sha }}
-            - Date: ${{ github.event.head_commit.timestamp }}
