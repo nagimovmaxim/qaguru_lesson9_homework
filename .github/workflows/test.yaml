@@ -42,6 +42,14 @@ jobs:
         run: ./gradlew test
         continue-on-error: true
 
+      - name: Generate Allure report
+        if: always()
+        run: |
+          sudo apt-get install -y wget
+          wget -q https://github.com/allure-framework/allure2/releases/download/2.34.0/allure-2.34.0.tgz
+          tar -xzf allure-2.34.0.tgz
+          ./allure-2.34.0/bin/allure generate build/allure-results -o allure-report --clean
+
       - name: Load test report history
         uses: actions/checkout@v4
         if: always()
@@ -50,18 +58,21 @@ jobs:
           ref: gh-pages
           path: gh-pages
 
-      - name: Build allure report
-        uses: simple-elf/allure-report-action@v1.9
+      - name: Combine reports with history
         if: always()
-        with:
-          allure_history: allure-history
-          allure_results: build/allure-results
+        run: |
+          if [ -d "gh-pages/history" ]; then
+            cp -r gh-pages/history allure-report/history 2>/dev/null || true
+          fi
+          if [ -d "gh-pages/data" ]; then
+            cp -r gh-pages/data allure-report/data 2>/dev/null || true
+          fi
 
-      - name: Publish Allure report to GitHub Pages
+      - name: Deploy to GitHub Pages
         if: always()
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
-          publish_dir: allure-history
+          publish_dir: allure-report
           keep_files: false
