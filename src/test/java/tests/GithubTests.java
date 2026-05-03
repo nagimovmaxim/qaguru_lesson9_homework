@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @Tag("Homework9")
 public class GithubTests extends BaseTests {
-    
+
     @ParameterizedTest(name = " by name: {1} in repo: {0}")
     @CsvFileSource(resources = "/csv/testData.csv")
     @DisplayName("Check Issue")

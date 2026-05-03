@@ -27,20 +27,20 @@ public class BaseTests {
 
         Configuration.browserCapabilities = options;
 
-//        if (System.getProperty("os.name").toLowerCase().contains("linux")) {
-//            String[] possiblePaths = {
-//                    "/usr/bin/chromedriver",
-//                    "/usr/local/bin/chromedriver",
-//                    "/snap/bin/chromedriver"
-//            };
-//
-//            for (String path : possiblePaths) {
-//                if (new java.io.File(path).exists()) {
-//                    System.setProperty("webdriver.chrome.driver", path);
-//                    break;
-//                }
-//            }
-//        }
+        if (System.getProperty("os.name").toLowerCase().contains("linux")) {
+            String[] possiblePaths = {
+                    "/usr/bin/chromedriver",
+                    "/usr/local/bin/chromedriver",
+                    "/snap/bin/chromedriver"
+            };
+
+            for (String path : possiblePaths) {
+                if (new java.io.File(path).exists()) {
+                    System.setProperty("webdriver.chrome.driver", path);
+                    break;
+                }
+            }
+        }
 
         SelenideLogger.addListener("AllureSelenide",
                 new AllureSelenide()
