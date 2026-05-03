@@ -32,21 +32,9 @@ jobs:
 
       - name: Install Chrome and ChromeDriver
         run: |
-          echo "=== Installing Chrome ==="
           sudo apt-get update
-          sudo apt-get install -y google-chrome-stable
-          
-          echo "=== Chrome version ==="
+          sudo apt-get install -y google-chrome-stable chromium-chromedriver
           google-chrome --version
-          
-          echo "=== Installing ChromeDriver ==="
-          CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+')
-          echo "Chrome version: $CHROME_VERSION"
-          
-          # Установка ChromeDriver через webdrivermanager или вручную
-          sudo apt-get install -y chromium-chromedriver
-          
-          echo "=== ChromeDriver version ==="
           chromedriver --version
 
       - name: Make gradlew executable
@@ -56,8 +44,7 @@ jobs:
         run: ./gradlew test
         continue-on-error: true
         env:
-          SELENIDE_DRIVERMANAGER: false  # Отключаем автоматическую загрузку драйверов
-          CHROMEDRIVER_PATH: /usr/bin/chromedriver
+          SELENIDE_DRIVERMANAGER: false
 
       - name: Generate Allure report
         if: always()
@@ -65,23 +52,43 @@ jobs:
           sudo apt-get install -y wget
           wget -q https://github.com/allure-framework/allure2/releases/download/2.34.0/allure-2.34.0.tgz
           tar -xzf allure-2.34.0.tgz
+          
+          # Очищаем папку отчета перед генерацией
+          rm -rf allure-report
+          
+          # Генерируем отчет
           ./allure-2.34.0/bin/allure generate build/allure-results -o allure-report --clean
 
-      - name: Load test report history
-        uses: actions/checkout@v4
+      - name: Load previous report history
         if: always()
-        continue-on-error: true
+        uses: actions/checkout@v4
         with:
           ref: gh-pages
-          path: gh-pages
+          path: gh-pages-history
+          fetch-depth: 1
+        continue-on-error: true
 
-      - name: Combine reports with history
+      - name: Merge history with new report
         if: always()
         run: |
-          if [ -d "gh-pages/history" ]; then
-            cp -r gh-pages/history allure-report/history 2>/dev/null || true
-            cp -r gh-pages/data allure-report/data 2>/dev/null || true
+          echo "=== Checking for previous history ==="
+          if [ -d "gh-pages-history/history" ]; then
+            echo "Found previous history, copying..."
+            mkdir -p allure-report/history
+            cp -r gh-pages-history/history/* allure-report/history/ 2>/dev/null || echo "No history to copy"
+            cp -r gh-pages-history/widgets/* allure-report/widgets/ 2>/dev/null || echo "No widgets to copy"
+            cp -r gh-pages-history/data/* allure-report/data/ 2>/dev/null || echo "No data to copy"
+            echo "History merged successfully"
+          else
+            echo "No previous history found - first run"
           fi
+          
+          # Добавляем .nojekyll для GitHub Pages
+          touch allure-report/.nojekyll
+          
+          # Показываем структуру отчета
+          echo "=== Report contents ==="
+          ls -la allure-report/
 
       - name: Deploy to GitHub Pages
         if: always()
@@ -90,4 +97,13 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: allure-report
-          keep_files: false
+          force_orphan: true  # Полностью пересоздаем ветку
+          enable_jekyll: false
+          commit_message: "Update Allure report - ${{ github.run_number }} [skip ci]"
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'
+          full_commit_message: |
+            Update Allure report
+            - Run: ${{ github.run_number }}
+            - Commit: ${{ github.sha }}
+            - Date: ${{ github.event.head_commit.timestamp }}
